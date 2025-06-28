@@ -1,0 +1,100 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<configuration scan="true" scanPeriod="60 seconds" debug="false">
+
+    <!-- 日志输出路径 -->
+    <property name="log.path" value="/data/logs/springboot-log-logback-demo"/>
+
+    <!-- 控制台日志格式（带颜色） -->
+    <property name="console.log.pattern"
+              value="%green(%d{yyyy-MM-dd HH:mm:ss}) %highlight([%level]) %boldMagenta(${PID}) --- %green([%thread])  %boldMagenta(%class) - [%method,%line]: %msg%n"/>
+
+    <!-- 文件日志标准格式 -->
+    <property name="log.pattern"
+              value="%d{yyyy-MM-dd HH:mm:ss} [%level] ${PID} --- [%thread] %class - [%method,%line]: %msg%n"/>
+
+    <!-- Spring 属性注入 -->
+    <springProperty name="LOG_STASH_URL" scope="context" source="logging.logstash.url" defaultValue="192.168.31.114:4560"/>
+    <springProperty name="app" scope="context" source="spring.application.name" defaultValue="springboot-server"/>
+
+
+    <!-- 控制台 Appender -->
+    <appender name="console" class="ch.qos.logback.core.ConsoleAppender">
+        <encoder>
+            <pattern>${console.log.pattern}</pattern>
+            <charset>utf-8</charset>
+        </encoder>
+    </appender>
+
+    <!-- 文件日志 Appender -->
+    <appender name="file_out" class="ch.qos.logback.core.rolling.RollingFileAppender">
+        <file>${log.path}/out.log</file>
+        <rollingPolicy class="ch.qos.logback.core.rolling.TimeBasedRollingPolicy">
+            <fileNamePattern>${log.path}/out.%d{yyyy-MM-dd}.log</fileNamePattern>
+            <maxHistory>10</maxHistory>
+            <totalSizeCap>1GB</totalSizeCap>
+        </rollingPolicy>
+        <encoder>
+            <pattern>${log.pattern}</pattern>
+        </encoder>
+
+        <!-- 只记录 INFO 及以上级别 -->
+        <filter class="ch.qos.logback.classic.filter.ThresholdFilter">
+            <level>INFO</level>
+        </filter>
+    </appender>
+
+    <!-- 异步写入文件 -->
+    <appender name="async_out" class="ch.qos.logback.classic.AsyncAppender">
+        <discardingThreshold>0</discardingThreshold>
+        <queueSize>1024</queueSize>
+        <appender-ref ref="file_out"/>
+    </appender>
+
+    <!-- Logstash Appender：发送 JSON 格式日志到 Logstash -->
+    <appender name="logstash" class="net.logstash.logback.appender.LogstashTcpSocketAppender">
+        <destination>${LOG_STASH_URL}</destination>
+
+        <!-- 连接策略和重连机制 -->
+        <connectionStrategy>
+            <roundRobin>
+                <connectionTTL>5 minutes</connectionTTL>
+            </roundRobin>
+        </connectionStrategy>
+        <reconnectionDelay>10 seconds</reconnectionDelay>
+        <includeCallerData>true</includeCallerData>
+
+        <!-- JSON 编码器 -->
+        <encoder charset="UTF-8" class="net.logstash.logback.encoder.LoggingEventCompositeJsonEncoder">
+            <providers>
+                <pattern>
+                    <pattern>
+                        {
+                        "app":"${app}",
+                        "timestamp": "%d{yyyy-MM-dd HH:mm:ss.SSS}",
+                        "severity": "%level",
+                        "logger": "%logger",
+                        "class": "%class",
+                        "method": "%method",
+                        "lineNumber": "%line",
+                        "thread": "%thread",
+                        "message": "%msg",
+                        "clientIp": "%X{header.client-ip:-}",
+                        "contentLength": "%X{header.content-length:-}",
+                        "traceId": "%X{X-B3-TraceId:-}",
+                        "spanId": "%X{X-B3-SpanId:-}",
+                        "stack_trace": "%exception{10}"
+                        }
+                    </pattern>
+                </pattern>
+            </providers>
+        </encoder>
+    </appender>
+
+    <!-- Root logger -->
+    <root level="info">
+        <appender-ref ref="console"/>
+        <appender-ref ref="async_out"/>
+        <appender-ref ref="logstash"/>
+    </root>
+
+</configuration>

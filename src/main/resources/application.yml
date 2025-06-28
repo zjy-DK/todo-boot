@@ -1,0 +1,17 @@
+# Tomcat
+server:
+  port: 9917
+
+# 根据环境读取配置文件（手动）
+spring:
+  profiles:
+    active: dev
+  application:
+    # 应用名称
+    name: todo-boot
+springdoc:
+  title: todo-boot
+  description: todo-boot
+  version: v1.0.0
+  contact:
+    name: ZJY
