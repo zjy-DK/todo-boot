@@ -3,11 +3,11 @@
 #### 介绍
 ​	todo-boot是一个开源的todo系统，实现了基础的todo功能。
 
-后端地址：xxxx
+后端地址：[zjy-DK/todo-boot： todo-boot是一个开源的todo项目，实现todo基础功能](https://github.com/zjy-DK/todo-boot)
 
-app端地址：xxxx
+app端地址：[zjy-DK/todo-uni](https://github.com/zjy-DK/todo-uni)
 
-桌面端地址：xxxxx
+桌面端地址：[zjy-DK/todo-electron](https://github.com/zjy-DK/todo-electron)
 
 #### 系统架构
 - Spring Boot
